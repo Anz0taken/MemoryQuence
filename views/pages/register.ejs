@@ -1,0 +1,55 @@
+<html>
+    <head>
+        <%- headerContainer %>
+        <script src="/js/sjcl.js"></script>
+        <link rel="stylesheet" type="text/css" href="/css/custom.css" />
+    </head>
+    <body>
+        <div class="wrapper fadeInDown">
+            <div id="formContent">
+              <!-- Login Form -->
+              <form id="myForm" action="/adduser" method="post">
+                <input type="text" id="username" class="fadeIn second" name="username" placeholder="register username">
+                <input type="password" id="password" class="fadeIn third" name="password" placeholder="password">
+                <input type="password" id="password_check" class="fadeIn third" placeholder="confirm password">
+                <p id="dialog" style="color:red; font-size: 12px;"></p>
+              </form>
+              <button id="button" class="fadeIn fourth">Log in</button>
+          
+              <!-- Remind Passowrd -->
+              <div id="formFooter">
+                <a class="underlineHover" href="\">Already register? Log in</a>
+              </div>
+          
+            </div>
+          </div>
+          <script>
+            var myform = document.getElementById('myForm');
+            var myButton = document.getElementById('button');
+            myButton.onclick = function()
+            {
+                if(document.getElementById("password").value == document.getElementById("password_check").value)
+                {
+                    if(document.getElementById("username").value.length > 5)
+                    {
+                        if(document.getElementById("password").value.length > 7)
+                        {
+                            console.log(document.getElementById("password").value.length)
+                            document.getElementById('password').value = sjcl.codec.hex.fromBits(sjcl.hash.sha256.hash(document.getElementById('password').value));
+                            myform.submit();
+                        }
+                        else
+                            document.getElementById("dialog").innerHTML = "Please insert a password with more then 7 characters.";
+                    }
+                    else
+                        document.getElementById("dialog").innerHTML = "Please insert a username with more then 5 characters.";
+                }
+                else
+                {
+                    document.getElementById("dialog").innerHTML = "Please verify that both passwords inserted are equal.";
+                }
+
+            };
+        </script>
+    </body>
+</html>

@@ -1,0 +1,51 @@
+table{
+    position: absolute;
+    top: 20%;
+
+}
+
+.image_1, .image_2, .image_3, .image_4{
+    width:180px;
+    height:180px;
+}
+
+.image_1{
+    background-image:url(/images/blue_normal.png);
+}
+
+.image_2{
+    background-image:url(/images/yellow_normal.png);
+}
+
+
+.image_3{
+    background-image:url(/images/green_normal.png);
+}
+
+
+.image_4{
+    background-image:url(/images/red_normal.png);
+}
+
+.image_1:hover, .image_2:hover, .image_3:hover, .image_4:hover{
+    cursor: pointer;
+}
+
+#illustrationMode{
+    -webkit-animation: fadeAnimation 0.5s;
+}
+
+@-webkit-keyframes fadeAnimation {
+    0% {
+        opacity: 0;
+    }
+    25% {
+        opacity: 0.25;
+    }
+    50% {
+        opacity: 0.5;
+    }
+    100% {
+        opacity: 1;
+    }
+}

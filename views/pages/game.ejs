@@ -1,0 +1,195 @@
+<html>
+    <head>
+        <%- headerContainer %>
+        <link rel="stylesheet" type="text/css" href="/css/custom.css" />
+        <link rel="stylesheet" type="text/css" href="/css/game.css" />
+    </head>
+    <body>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <a class="navbar-brand" href="#">MemoryQuence</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav mr-auto">
+
+                <li class="nav-item active">
+                    <a class="nav-link" href="#">Game</a>
+                </li>
+
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Account
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                        <a class="dropdown-item" href="#">Settings</a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="/logout">Log out</a>
+                    </div>
+                </li>
+
+                <li style="position:absolute; right:10px;" class="nav-item active">
+                    <a class="nav-item nav-link disabled" style="color:black;" href="#">Welcome <strong><%= username %></strong></a>
+                </li>
+
+                </ul>
+            </div>
+        </nav>
+        <p id="illustrationMode" class="d-none p-3 mb-1 bg-warning text-dark" style="padding:10px!important; position:fixed; width: 100%;">
+            <svg style="position:relative; bottom:2px;" width="16" height="16" fill="currentColor" class="bi bi-info-circle" viewBox="0 0 16 16">
+            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+            <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+          </svg>
+          Illustration Mode
+        </p>
+        <div class="wrapper fadeInDown">
+            <table style="position: relative;  bottom:80px;">
+                <tr>
+                    <td onclick="addSequence(1)" id="square_1" class="image_1"></td>
+                    <td onclick="addSequence(2)" id="square_2" class="image_2" ></td>
+                </tr>
+                 <tr>
+                    <td onclick="addSequence(3)" id="square_3" class="image_3"></td>
+                    <td onclick="addSequence(4)" id="square_4" class="image_4"></td>
+                </tr>
+              </table>
+              <div style="position: relative;  bottom:75px;" style="text-align:center; position:absolute; bottom:100px; width:50%; height: 7%;">
+                <button id="gameButton1" onclick="resetSequence()" type="button" class="btn btn-danger">Reset</button>
+                <button id="gameButton2" onclick="sendSequence()"  type="button" class="btn btn-success">Send</button>
+                <button id="gameButton3" onclick="startSequence()" type="button" class="btn btn-success">Start</button>
+            </div>
+        </div>
+            <!-- Modallogin -->
+            <div class="modal fade bd-example-modal-lg" id="infoModal" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title">Game over</h5>
+                        <button class="close" type="button" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+                      </div>
+                      <div class="modal-body">
+                        <label class="form-label">Your score is <strong id="lastScore"></strong></label><br>
+                        <div class="dropdown-divider"></div>
+                        <label id="communicationLine" class="form-label float-left" style="font-size: 14px;"></label>
+                        <button id="saveGame" onclick="saveScore()" type="button" class="btn btn-success float-right">Save score</button>
+                    </div>
+                  </div>
+            </div><!-- End Modallogin -->
+   </body>
+    <script>
+        var audioSequences = new Array(4);
+        audioSequences[0] = new Audio('sounds/first.mp3');
+        audioSequences[1] = new Audio('sounds/second.mp3');
+        audioSequences[2] = new Audio('sounds/third.mp3');
+        audioSequences[3] = new Audio('sounds/fourth.mp3');
+        
+        var numberSequence = new Array();
+        var indexSequence = 0;
+
+        var myform = document.getElementById('myForm');
+        var myButton = document.getElementById('button');
+
+        var colors = ["blue", "yellow", "green", "red"];
+        var responseColors = ["red", "green"];
+
+        $('#gameButton1').hide();
+        $('#gameButton2').hide();
+
+        var illustrationMode = false; //if server responded with a sequence and it's been showing to the player
+
+        function addSequence(number)
+        {
+            if(!IndexIllustration)
+            {
+                lightUpBox(number)
+
+                numberSequence[indexSequence++] = number;
+            }
+        }
+
+        function resetSequence()
+        {
+            numberSequence = new Array();
+            indexSequence = 0;
+        }
+
+        function lightUpBox(number)
+        {
+            audioSequences[number - 1].pause();
+            audioSequences[number - 1].currentTime = 0;
+            audioSequences[number - 1].play();
+
+            $('#square_'+number).css('background-image','url(/images/'+colors[number-1]+'_lighted.png)');
+
+            setTimeout(() => {
+                $('#square_'+number).css('background-image','url(/images/'+colors[number-1]+'_normal.png)');
+            }, 500);
+        }
+
+        var IndexIllustration = 0;
+
+        function startIllustration(data)
+        {
+            if(IndexIllustration < data.length)
+            {
+                lightUpBox(data[IndexIllustration]);
+
+                setTimeout(() => {
+                    startIllustration(data);
+                }, 1000);
+            }
+            else
+                setTimeout( () => { IndexIllustration = 0; $('#illustrationMode').addClass('d-none');}, 1000 );
+
+            IndexIllustration++;
+        }
+
+        function sendSequence()
+        {
+            $.post("/sendSequence",
+            {
+                sendedSequence: numberSequence
+            },
+            function (data, status) {
+                if(!Array.isArray(data))
+                {
+                    $('#lastScore').html(data);
+                    $('#communicationLine').html();
+                    $('#infoModal').modal('show');
+                    $('#gameButton1').hide();
+                    $('#gameButton2').hide();
+                    $('#gameButton3').show();
+                }
+                else
+                {
+                    startIllustration(data);
+                    $('#illustrationMode').removeClass('d-none');
+                }
+                    
+
+                resetSequence();
+            });
+        }
+
+        function saveScore()
+        {
+            $.get("/saveScore", function(data, status, xhr){
+                $('#communicationLine').html(data);
+                $('#communicationLine').css("color", responseColors[(xhr.status - 209)%2]);
+            });
+        }
+
+        function startSequence()
+        {      
+            $('#gameButton1').show();
+            $('#gameButton2').show();
+            $('#gameButton3').hide();
+
+            $.get("/startSequence", function(data, status){
+                startIllustration(data);
+                $('#illustrationMode').removeClass('d-none');
+            });
+        }
+    </script>
+</html>
