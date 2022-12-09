@@ -15,7 +15,7 @@
                 <ul class="navbar-nav mr-auto">
 
                 <li class="nav-item active">
-                    <a class="nav-link" href="#">Game</a>
+                    <a class="nav-link" style="cursor: pointer;" onclick="getScoreboard();">Scoreboard</a>
                 </li>
 
                 <li class="nav-item dropdown">
@@ -23,8 +23,6 @@
                     Account
                     </a>
                     <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                        <a class="dropdown-item" href="#">Settings</a>
-                        <div class="dropdown-divider"></div>
                         <a class="dropdown-item" href="/logout">Log out</a>
                     </div>
                 </li>
@@ -60,7 +58,31 @@
                 <button id="gameButton3" onclick="startSequence()" type="button" class="btn btn-success">Start</button>
             </div>
         </div>
-            <!-- Modallogin -->
+
+            <!-- Modal scoreboard -->
+            <div class="modal fade bd-example-modal-lg" id="scoreboardModal" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title">Scoreboard</h5>
+                        <button class="close" type="button" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+                      </div>
+                      <div class="modal-body">
+                        <label class="form-label">Top <strong>Five</strong> scores : </label><br>
+                        
+                        <ul class="list-group" id="responseScoreboards">
+
+                        </ul>
+
+                        <div class="dropdown-divider"></div>
+
+                        <label class="form-label">Your <strong>max</strong> score : <results id="maxscore"></results><br>
+                  </div>
+                </div><!-- End modal scoreboard -->
+            </div>
+            </div>
+
+            <!-- Modal end game -->
             <div class="modal fade bd-example-modal-lg" id="infoModal" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
                 <div class="modal-dialog" role="document">
                     <div class="modal-content">
@@ -75,7 +97,9 @@
                         <button id="saveGame" onclick="saveScore()" type="button" class="btn btn-success float-right">Save score</button>
                     </div>
                   </div>
-            </div><!-- End Modallogin -->
+                </div>
+            </div><!-- End modal end game -->
+
    </body>
     <script>
         var audioSequences = new Array(4);
@@ -84,8 +108,8 @@
         audioSequences[2] = new Audio('sounds/third.mp3');
         audioSequences[3] = new Audio('sounds/fourth.mp3');
         
-        var numberSequence = new Array();
-        var indexSequence = 0;
+        var numberSequence = new Array();   //input color sequence
+        var indexSequence = 0;              //number of colors added to the sequence 
 
         var myform = document.getElementById('myForm');
         var myButton = document.getElementById('button');
@@ -96,63 +120,86 @@
         $('#gameButton1').hide();
         $('#gameButton2').hide();
 
-        var illustrationMode = false; //if server responded with a sequence and it's been showing to the player
+        var illustrationMode = false;   //if server responded with a sequence and it's been showing to the player
+        var IndexIllustration = 0;      //index used to show the sequence to the user
 
+        /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            ---General info-------------
+                Add a new color to the sequence sequence.
+        ____________________________________________*/
         function addSequence(number)
         {
-            if(!IndexIllustration)
+            if(!IndexIllustration)  //if the illustration mode is not up
             {
-                lightUpBox(number)
+                lightUpBox(number); //light up that box
 
-                numberSequence[indexSequence++] = number;
+                numberSequence[indexSequence++] = number;   //add the color to the sequence
             }
         }
 
+        /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            ---General info-------------
+                Reset color sequence.
+        ____________________________________________*/
         function resetSequence()
         {
             numberSequence = new Array();
             indexSequence = 0;
         }
 
+        /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            ---General info-------------
+                Light up a box and set a function to turn it off.
+        ____________________________________________*/
         function lightUpBox(number)
         {
+            //play the associated audio
             audioSequences[number - 1].pause();
             audioSequences[number - 1].currentTime = 0;
             audioSequences[number - 1].play();
 
+            //light the square on
             $('#square_'+number).css('background-image','url(/images/'+colors[number-1]+'_lighted.png)');
 
+            //after 500ms light the square off
             setTimeout(() => {
                 $('#square_'+number).css('background-image','url(/images/'+colors[number-1]+'_normal.png)');
             }, 500);
         }
 
-        var IndexIllustration = 0;
-
+        /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            ---General info-------------
+                Show to the user the sequence given by the server.
+        ____________________________________________*/
         function startIllustration(data)
         {
-            if(IndexIllustration < data.length)
+            if(IndexIllustration < data.length) //for each color form the sequence sent by the server
             {
-                lightUpBox(data[IndexIllustration]);
+                lightUpBox(data[IndexIllustration]); //light it up
 
+                //light up next square in 1000ms
                 setTimeout(() => {
                     startIllustration(data);
                 }, 1000);
             }
-            else
+            else    //when sequence colors are over, reset illustration data sequence 
                 setTimeout( () => { IndexIllustration = 0; $('#illustrationMode').addClass('d-none');}, 1000 );
 
             IndexIllustration++;
         }
 
+        /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            ---General info-------------
+                Send color sequence to the server.
+        ____________________________________________*/
         function sendSequence()
         {
-            $.post("/sendSequence",
+            $.post("/sendSequence", //action server target
             {
-                sendedSequence: numberSequence
+                sendedSequence: numberSequence  //input
             },
             function (data, status) {
-                if(!Array.isArray(data))
+                if(!Array.isArray(data))    //if the user has lost
                 {
                     $('#lastScore').html(data);
                     $('#communicationLine').html();
@@ -163,23 +210,31 @@
                 }
                 else
                 {
-                    startIllustration(data);
+                    startIllustration(data);    //start new illustration sequence
                     $('#illustrationMode').removeClass('d-none');
                 }
                     
-
                 resetSequence();
             });
         }
 
+        /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            ---General info-------------
+                Save user score to the server.
+        ____________________________________________*/
         function saveScore()
         {
             $.get("/saveScore", function(data, status, xhr){
-                $('#communicationLine').html(data);
-                $('#communicationLine').css("color", responseColors[(xhr.status - 209)%2]);
+                $('#communicationLine').html(data); //show server response
+                $('#communicationLine').css("color", responseColors[(xhr.status - 209)%2]); //even status are positive feedbacks, odd status are negative feedbacks.
             });
         }
 
+        /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            ---General info-------------
+                Setup graphical and input settings before starting illustration,
+                then start illustration.
+        ____________________________________________*/
         function startSequence()
         {      
             $('#gameButton1').show();
@@ -191,5 +246,19 @@
                 $('#illustrationMode').removeClass('d-none');
             });
         }
+
+        /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            ---General info-------------
+                Get users scores and show them to the user.
+        ____________________________________________*/
+        function getScoreboard()
+        {
+            $.get("/getScoreboard", function(data, status, xhr){
+                document.getElementById("maxscore").innerHTML = data[data.length - 1];
+                document.getElementById("responseScoreboards").innerHTML = data.slice(0, data.length - 1);
+                $('#scoreboardModal').modal('show');
+            });
+        }
+
     </script>
 </html>
